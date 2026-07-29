@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Свидание?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Marck+Script&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF3EA;
+    --blush:#E8B4B8;
+    --rose:#C97B84;
+    --burgundy:#7A2B3B;
+    --deep:#4A1622;
+    --gold:#C9A24B;
+    --ink:#3A2229;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    font-family:'Manrope',sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(232,180,184,0.35), transparent 55%),
+      radial-gradient(ellipse at 85% 85%, rgba(201,162,75,0.18), transparent 50%),
+      var(--cream);
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  #app{
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    position:relative;
+  }
+
+  /* ambient floating hearts */
+  .heart{
+    position:fixed;
+    top:100%;
+    font-size:20px;
+    color:var(--rose);
+    opacity:0.35;
+    pointer-events:none;
+    animation:float linear infinite;
+    z-index:0;
+  }
+  @keyframes float{
+    0%{ transform:translateY(0) rotate(0deg); opacity:0; }
+    10%{ opacity:0.35; }
+    90%{ opacity:0.3; }
+    100%{ transform:translateY(-110vh) rotate(25deg); opacity:0; }
+  }
+
+  .screen{
+    width:100%;
+    max-width:520px;
+    text-align:center;
+    position:relative;
+    z-index:1;
+    animation:riseIn 0.7s cubic-bezier(.2,.8,.25,1);
+  }
+  @keyframes riseIn{
+    from{opacity:0; transform:translateY(18px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .eyebrow{
+    font-family:'Manrope',sans-serif;
+    font-size:12px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--rose);
+    margin-bottom:14px;
+    font-weight:600;
+  }
+
+  h1{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:600;
+    font-size:clamp(34px,7vw,54px);
+    line-height:1.15;
+    margin:0 0 10px;
+    color:var(--deep);
+  }
+  h1 em{
+    font-family:'Marck Script',cursive;
+    font-style:normal;
+    color:var(--burgundy);
+    font-size:1.15em;
+  }
+
+  p.sub{
+    font-size:16px;
+    color:#7A5A62;
+    margin:0 0 40px;
+    line-height:1.5;
+  }
+
+  /* Question screen buttons */
+  .choice-row{
+    position:relative;
+    display:flex;
+    gap:20px;
+    justify-content:center;
+    align-items:center;
+    min-height:120px;
+  }
+  .btn{
+    font-family:'Manrope',sans-serif;
+    font-weight:600;
+    font-size:17px;
+    padding:16px 40px;
+    border-radius:999px;
+    border:none;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-yes{
+    background:var(--burgundy);
+    color:var(--cream);
+    box-shadow:0 8px 22px rgba(122,43,59,0.35);
+  }
+  .btn-yes:hover{ transform:translateY(-2px) scale(1.03); box-shadow:0 12px 28px rgba(122,43,59,0.42); }
+  .btn-yes:active{ transform:scale(0.97); }
+
+  .btn-no{
+    background:transparent;
+    color:var(--rose);
+    border:1.5px solid var(--rose);
+    position:relative;
+  }
+  #no-btn{
+    position:fixed;
+    transition:left 0.28s cubic-bezier(.2,.9,.3,1.3), top 0.28s cubic-bezier(.2,.9,.3,1.3);
+  }
+  #no-btn.placed-inline{
+    position:relative;
+    left:auto; top:auto;
+  }
+
+  .yes-count{
+    margin-top:26px;
+    font-size:13px;
+    color:var(--rose);
+    opacity:0.85;
+    min-height:18px;
+  }
+
+  /* Card / step container shared */
+  .card{
+    background:rgba(255,255,255,0.55);
+    border:1px solid rgba(201,162,75,0.35);
+    border-radius:22px;
+    padding:36px 30px;
+    backdrop-filter:blur(6px);
+  }
+
+  /* Date picker screen */
+  .field{
+    text-align:left;
+    margin-bottom:22px;
+  }
+  .field label{
+    display:block;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--burgundy);
+    margin-bottom:8px;
+    font-weight:600;
+  }
+  input[type="date"], input[type="time"]{
+    width:100%;
+    font-family:'Manrope',sans-serif;
+    font-size:16px;
+    padding:14px 16px;
+    border-radius:12px;
+    border:1.5px solid var(--blush);
+    background:#fff;
+    color:var(--ink);
+    outline:none;
+  }
+  input[type="date"]:focus, input[type="time"]:focus{
+    border-color:var(--rose);
+  }
+
+  .quick-dates{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:26px;
+  }
+  .chip{
+    font-family:'Manrope',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 16px;
+    border-radius:999px;
+    border:1.5px solid var(--blush);
+    background:#fff;
+    color:var(--burgundy);
+    cursor:pointer;
+    transition:all 0.15s ease;
+  }
+  .chip.active, .chip:hover{
+    background:var(--burgundy);
+    border-color:var(--burgundy);
+    color:var(--cream);
+  }
+
+  .btn-primary{
+    width:100%;
+    background:var(--burgundy);
+    color:var(--cream);
+    font-family:'Manrope',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    transition:transform 0.15s ease, opacity 0.15s ease;
+  }
+  .btn-primary:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+  .btn-primary:not(:disabled):hover{ transform:translateY(-2px); }
+
+  /* Activity screen */
+  .activities{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .activity{
+    background:#fff;
+    border:1.5px solid var(--blush);
+    border-radius:16px;
+    padding:20px 14px;
+    cursor:pointer;
+    transition:all 0.15s ease;
+    text-align:center;
+  }
+  .activity .icon{ font-size:26px; display:block; margin-bottom:8px; }
+  .activity .label{ font-size:14px; font-weight:600; color:var(--ink); }
+  .activity:hover{ transform:translateY(-2px); border-color:var(--rose); }
+  .activity.selected{
+    background:var(--burgundy);
+    border-color:var(--burgundy);
+  }
+  .activity.selected .label, .activity.selected .icon{ color:var(--cream); }
+
+  /* Final screen */
+  .summary-line{
+    font-size:16px;
+    color:var(--ink);
+    margin:6px 0;
+  }
+  .summary-line b{ color:var(--burgundy); }
+
+  .back-link{
+    display:inline-block;
+    margin-top:18px;
+    font-size:13px;
+    color:#9C7079;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+
+  @media (max-width:400px){
+    .choice-row{ flex-direction:column; gap:16px; }
+    .activities{ grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const app = document.getElementById('app');
+let noEscapes = 0;
+let chosenDate = null;
+let chosenTime = null;
+let chosenActivity = null;
+
+// ---------- Telegram config ----------
+const TELEGRAM_BOT_TOKEN = '8907860989:AAHL6yLsTXCVIFLDKtDGQdFY8rDQJ1PMNCk';
+const TELEGRAM_CHAT_ID = '8642326472';
+
+async function sendToTelegram(text){
+  if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === 'PASTE_CHAT_ID_HERE'){
+    console.warn('TELEGRAM_CHAT_ID не задан — сообщение не отправлено.');
+    return {ok:false, reason:'no-chat-id'};
+  }
+  try{
+    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode:'HTML' })
+    });
+    const data = await res.json();
+    return { ok: data.ok, data };
+  }catch(err){
+    console.error('Telegram send error:', err);
+    return { ok:false, reason:'network', err };
+  }
+}
+
+// ---------- ambient hearts ----------
+function spawnHearts(){
+  const glyphs = ['♥','❤','♡'];
+  setInterval(()=>{
+    const h = document.createElement('div');
+    h.className = 'heart';
+    h.textContent = glyphs[Math.floor(Math.random()*glyphs.length)];
+    h.style.left = Math.random()*100+'vw';
+    h.style.fontSize = (14+Math.random()*18)+'px';
+    h.style.animationDuration = (7+Math.random()*6)+'s';
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(), 14000);
+  }, 900);
+}
+spawnHearts();
+
+// ---------- SCREEN 1: the question ----------
+function renderQuestion(){
+  noEscapes = 0;
+  app.innerHTML = `
+    <div class="screen">
+      <div class="eyebrow">Один вопрос</div>
+      <h1>Дорогая Анна,<br>пойдёшь <em>со мной</em><br>на свидание?</h1>
+      <p class="sub">Подумай хорошенько. Хотя один из вариантов ответа может немного... сопротивляться.</p>
+      <div class="choice-row" id="choice-row">
+        <button class="btn btn-yes" id="yes-btn">Да</button>
+        <button class="btn btn-no" id="no-btn">Нет</button>
+      </div>
+      <div class="yes-count" id="yes-count"></div>
+    </div>
+  `;
+
+  const yesBtn = document.getElementById('yes-btn');
+  const noBtn = document.getElementById('no-btn');
+  const yesCount = document.getElementById('yes-count');
+
+  yesBtn.addEventListener('click', renderDatePicker);
+
+  function escapeButton(){
+    noEscapes++;
+    const margin = 60;
+    const w = noBtn.offsetWidth || 120;
+    const h = noBtn.offsetHeight || 50;
+    const maxX = window.innerWidth - w - margin;
+    const maxY = window.innerHeight - h - margin;
+    const newX = margin + Math.random()*Math.max(maxX-margin,50);
+    const newY = margin + Math.random()*Math.max(maxY-margin,50);
+    noBtn.style.left = newX+'px';
+    noBtn.style.top = newY+'px';
+
+    const phrases = [
+      'ой, не в этот раз',
+      'а вот и нет',
+      'даже не думай',
+      'слишком медленно',
+      'попробуй ещё',
+      'нет-нет-нет'
+    ];
+    yesCount.textContent = phrases[Math.min(noEscapes-1, phrases.length-1)];
+  }
+
+  // first touch/hover triggers escape and switches to fixed positioning
+  const activate = (e)=>{
+    e.preventDefault();
+    if(!noBtn.classList.contains('activated')){
+      noBtn.classList.add('activated');
+    }
+    escapeButton();
+  };
+
+  noBtn.addEventListener('mouseenter', activate);
+  noBtn.addEventListener('click', (e)=>{ e.preventDefault(); escapeButton(); });
+  noBtn.addEventListener('touchstart', activate, {passive:false});
+}
+
+// ---------- SCREEN 2: date picker ----------
+function renderDatePicker(){
+  app.innerHTML = `
+    <div class="screen">
+      <div class="eyebrow">Отлично!</div>
+      <h1>Когда <em>встретимся</em>?</h1>
+      <p class="sub">Выбери день и время, которое тебе удобно.</p>
+      <div class="card">
+        <div class="quick-dates" id="quick-dates"></div>
+        <div class="field">
+          <label for="date-input">Дата</label>
+          <input type="date" id="date-input">
+        </div>
+        <div class="field">
+          <label for="time-input">Время</label>
+          <input type="time" id="time-input" value="19:00">
+        </div>
+        <button class="btn-primary" id="date-next" disabled>Дальше</button>
+      </div>
+      <div class="back-link" id="back-to-q">← назад</div>
+    </div>
+  `;
+
+  document.getElementById('back-to-q').addEventListener('click', renderQuestion);
+
+  const dateInput = document.getElementById('date-input');
+  const timeInput = document.getElementById('time-input');
+  const nextBtn = document.getElementById('date-next');
+  const quickDatesEl = document.getElementById('quick-dates');
+
+  // quick date chips: today, tomorrow, this weekend
+  const today = new Date();
+  const fmt = (d)=> d.toISOString().split('T')[0];
+  const labelFmt = (d)=> d.toLocaleDateString('ru-RU', {weekday:'short', day:'numeric', month:'short'});
+
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+  const dayAfter = new Date(today); dayAfter.setDate(today.getDate()+2);
+
+  const quick = [
+    {label:'Сегодня', date: fmt(today)},
+    {label:'Завтра', date: fmt(tomorrow)},
+    {label: labelFmt(dayAfter), date: fmt(dayAfter)},
+  ];
+
+  quick.forEach(q=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = q.label;
+    chip.addEventListener('click', ()=>{
+      dateInput.value = q.date;
+      document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      checkReady();
+    });
+    quickDatesEl.appendChild(chip);
+  });
+
+  dateInput.min = fmt(today);
+  if(chosenDate) dateInput.value = chosenDate;
+  if(chosenTime) timeInput.value = chosenTime;
+
+  function checkReady(){
+    nextBtn.disabled = !dateInput.value;
+  }
+  dateInput.addEventListener('input', ()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    checkReady();
+  });
+  checkReady();
+
+  nextBtn.addEventListener('click', ()=>{
+    chosenDate = dateInput.value;
+    chosenTime = timeInput.value;
+    renderActivityPicker();
+  });
+}
+
+// ---------- SCREEN 3: activity picker ----------
+const ACTIVITIES = [
+  {id:'cafe', icon:'☕', label:'Уютное кафе'},
+  {id:'walk', icon:'🌳', label:'Прогулка'},
+  {id:'cinema', icon:'🎬', label:'Кино'},
+  {id:'dinner', icon:'🍽️', label:'Ужин'},
+  {id:'bowling', icon:'🎳', label:'Боулинг'},
+  {id:'surprise', icon:'✨', label:'Удиви меня'},
+];
+
+function renderActivityPicker(){
+  app.innerHTML = `
+    <div class="screen">
+      <div class="eyebrow">Почти готово</div>
+      <h1>Чем <em>займёмся</em>?</h1>
+      <p class="sub">Выбери, куда пойдём.</p>
+      <div class="card">
+        <div class="activities" id="activities"></div>
+        <button class="btn-primary" id="activity-next" disabled>Готово</button>
+      </div>
+      <div class="back-link" id="back-to-date">← назад</div>
+    </div>
+  `;
+
+  document.getElementById('back-to-date').addEventListener('click', renderDatePicker);
+
+  const grid = document.getElementById('activities');
+  const nextBtn = document.getElementById('activity-next');
+
+  ACTIVITIES.forEach(a=>{
+    const el = document.createElement('div');
+    el.className = 'activity' + (chosenActivity===a.id ? ' selected':'');
+    el.innerHTML = `<span class="icon">${a.icon}</span><span class="label">${a.label}</span>`;
+    el.addEventListener('click', ()=>{
+      chosenActivity = a.id;
+      document.querySelectorAll('.activity').forEach(x=>x.classList.remove('selected'));
+      el.classList.add('selected');
+      nextBtn.disabled = false;
+    });
+    grid.appendChild(el);
+  });
+
+  if(chosenActivity) nextBtn.disabled = false;
+
+  nextBtn.addEventListener('click', renderFinal);
+}
+
+// ---------- SCREEN 4: confirmation ----------
+function renderFinal(){
+  const activityObj = ACTIVITIES.find(a=>a.id===chosenActivity);
+  const dateObj = chosenDate ? new Date(chosenDate+'T00:00:00') : null;
+  const dateStr = dateObj ? dateObj.toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long'}) : '';
+
+  app.innerHTML = `
+    <div class="screen">
+      <div class="eyebrow">Договорились</div>
+      <h1>Тогда до <em>встречи</em> 💌</h1>
+      <div class="card">
+        <p class="summary-line"><b>Дата:</b> ${dateStr}</p>
+        <p class="summary-line"><b>Время:</b> ${chosenTime}</p>
+        <p class="summary-line"><b>Место:</b> ${activityObj ? activityObj.icon+' '+activityObj.label : ''}</p>
+        <p class="summary-line" id="send-status" style="font-size:13px;color:#9C7079;margin-top:16px;">Отправляю тебе весточку...</p>
+      </div>
+      <div class="back-link" id="restart">← начать заново</div>
+    </div>
+  `;
+  document.getElementById('restart').addEventListener('click', ()=>{
+    chosenDate = null; chosenTime = null; chosenActivity = null;
+    renderQuestion();
+  });
+
+  const message =
+    `💌 <b>Анна ответила «Да»!</b>\n` +
+    `📅 Дата: ${dateStr}\n` +
+    `⏰ Время: ${chosenTime}\n` +
+    `📍 Место: ${activityObj ? activityObj.icon+' '+activityObj.label : '—'}`;
+
+  const statusEl = document.getElementById('send-status');
+  sendToTelegram(message).then(result=>{
+    if(result.ok){
+      statusEl.textContent = 'Готово, сообщение уже у тебя в Telegram ✓';
+    } else if(result.reason === 'no-chat-id'){
+      statusEl.textContent = '';
+    } else {
+      statusEl.textContent = 'Не получилось отправить автоматически — но всё видно на этом экране.';
+    }
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
